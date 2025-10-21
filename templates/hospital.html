@@ -1,0 +1,175 @@
+<!-- templates/hospital.html -->
+{% extends "base.html" %}
+
+{% block title %}MediCare | Home{% endblock %}
+
+{% block content %}
+<section class="text-center mb-5">
+    <h2 class="text-success">Book Your Doctor Appointment</h2>
+    <p class="lead">Quality healthcare at your convenience. Trust our specialists for compassionate and expert care every time.</p>
+</section>
+
+<section class="bg-white p-4 rounded shadow mb-5">
+    <h3>Appointment Form</h3>
+    <form class="row g-3" id="appointmentForm">
+        <div class="col-md-6">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Your Name" required>
+        </div>
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="Your Email" required>
+        </div>
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Your Phone" required>
+        </div>
+        <div class="col-md-6">
+            <label for="doctor" class="form-label">Select Doctor</label>
+            <select id="doctor" class="form-select" name="doctor" required>
+                <option value="" disabled selected>Choose...</option>
+                {% for doctor in doctors %}
+                <option value="{{ doctor.name }}">{{ doctor.name }} ({{ doctor.specialty }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="date" class="form-label">Appointment Date</label>
+            <input type="date" class="form-control" id="date" name="date" required>
+        </div>
+        <div class="col-md-6">
+            <label for="time" class="form-label">Preferred Time</label>
+            <select id="time" class="form-select" name="time" required>
+                <option value="Morning (9AM-12PM)">Morning (9AM-12PM)</option>
+                <option value="Afternoon (1PM-4PM)">Afternoon (1PM-4PM)</option>
+                <option value="Evening (5PM-8PM)">Evening (5PM-8PM)</option>
+            </select>
+        </div>
+        <div class="col-12">
+            <label for="message" class="form-label">Additional Message</label>
+            <textarea class="form-control" id="message" name="message" rows="3" placeholder="Your Message"></textarea>
+        </div>
+        <div class="col-12">
+            <button type="submit" class="btn btn-success">Book Appointment</button>
+        </div>
+    </form>
+    <div id="appointmentAlert" class="alert alert-success mt-3" style="display: none;">
+        Appointment booked successfully! We'll contact you shortly.
+    </div>
+</section>
+
+<section>
+    <h3 class="text-center text-success">Meet Our Specialists</h3>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-3">
+        {% for doctor in doctors %}
+        <div class="col">
+            <div class="card h-100 text-center">
+                <img src="{{ doctor.image }}" class="card-img-top" alt="{{ doctor.name }}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ doctor.name }}</h5>
+                    <p class="card-text">{{ doctor.description }}</p>
+                    <div class="text-warning mb-2">
+                        {% for i in range(5) %}
+                            {% if i < doctor.rating|int %}
+                                <i class="fas fa-star"></i>
+                            {% elif i < doctor.rating %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <button onclick="bookDoctor('{{ doctor.name }}')" class="btn btn-outline-success">Book Now</button>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-danger" onclick="likeDoctor({{ doctor.id }})">
+                            <i class="fas fa-heart"></i> <span id="likes-{{ doctor.id }}">{{ doctor.likes }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="mt-5">
+    <div class="bg-white p-4 rounded shadow">
+        <h3 class="text-center text-success mb-4">Patient Testimonials</h3>
+        <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for testimonial in testimonials %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="text-center px-5">
+                        <p class="lead fst-italic">"{{ testimonial.text }}"</p>
+                        <p class="fw-bold">- {{ testimonial.author }}</p>
+                        <div class="text-warning">
+                            {% for i in range(testimonial.rating) %}
+                                <i class="fas fa-star"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function bookDoctor(doctorName) {
+    document.getElementById('doctor').value = doctorName;
+    document.getElementById('appointmentForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function likeDoctor(doctorId) {
+    fetch(`/api/doctor/${doctorId}/like`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById(`likes-${doctorId}`).textContent = data.likes;
+        }
+    });
+}
+
+document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/api/appointment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('appointmentAlert').style.display = 'block';
+            document.getElementById('appointmentForm').reset();
+            
+            setTimeout(() => {
+                document.getElementById('appointmentAlert').style.display = 'none';
+            }, 3000);
+        }
+    });
+});
+</script>
+{% endblock %}

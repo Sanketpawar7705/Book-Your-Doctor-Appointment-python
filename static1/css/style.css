@@ -1,0 +1,10 @@
+# static/css/style.css
+/* Same CSS as provided in style1.css */
+:root {
+  /* All the CSS variables from style1.css */
+  --primary: #2a9d8f;
+  --primary-light: #4bb5a8;
+  /* ... rest of the CSS ... */
+}
+
+/* Include all the CSS rules from style1.css */

@@ -1,0 +1,175 @@
+<!-- templates/services.html -->
+{% extends "base.html" %}
+
+{% block title %}Our Services | MediCare{% endblock %}
+
+{% block content %}
+<section class="text-center mb-5">
+    <h2 class="text-success">Our Medical Services</h2>
+    <p class="lead">Explore comprehensive healthcare services provided by specialists using the latest medical technology.</p>
+    
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search services..." id="searchQuery">
+                <button class="btn btn-success" type="button" onclick="filterServices()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row row-cols-1 row-cols-md-3 g-4" id="servicesContainer">
+    {% for service in services %}
+    <div class="col">
+        <div class="card h-100 text-center service-card" onclick="selectService('{{ service.name }}')">
+            <div class="card-body">
+                <i class="{{ service.icon }} fa-3x text-success mb-3"></i>
+                <h5 class="card-title">{{ service.name }}</h5>
+                <p class="card-text">{{ service.description }}</p>
+                <p class="fw-bold text-success">${{ service.price_range }}</p>
+                
+                <div class="d-flex justify-content-center gap-2">
+                    <button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation(); bookService('{{ service.name }}')">
+                        <i class="fas fa-calendar-alt me-1"></i> Book Now
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); likeService({{ service.id }})">
+                        <i class="far fa-heart"></i> {{ service.likes }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="mt-5" id="serviceDetails" style="display: none;">
+    <div class="bg-white p-4 rounded shadow">
+        <div class="row">
+            <div class="col-md-8">
+                <h3 class="text-success mb-3" id="serviceName"></h3>
+                <p id="serviceDescription"></p>
+                
+                <div class="mt-4">
+                    <h5 class="text-success">Common Procedures</h5>
+                    <ul id="serviceProcedures"></ul>
+                </div>
+                
+                <div class="mt-4">
+                    <h5 class="text-success">What to Expect</h5>
+                    <p id="serviceExpectations"></p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Quick Facts</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Duration:</strong> <span id="serviceDuration"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Preparation:</strong> <span id="servicePreparation"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Recovery Time:</strong> <span id="serviceRecovery"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Success Rate:</strong> <span id="serviceSuccessRate"></span>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-3 text-center">
+                            <button class="btn btn-success" onclick="bookService(document.getElementById('serviceName').textContent)">
+                                <i class="fas fa-calendar-alt me-1"></i> Book This Service
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- FAQ Accordion -->
+        <div class="mt-5">
+            <h5 class="text-success mb-3">Frequently Asked Questions</h5>
+            <div class="accordion" id="serviceFaqAccordion"></div>
+        </div>
+    </div>
+</section>
+
+<section class="text-center mt-5">
+    <div class="bg-white p-4 rounded shadow emergency-section">
+        <div class="row align-items-center">
+            <div class="col-md-8 text-start">
+                <h3 class="text-danger mb-3">24/7 Emergency Services</h3>
+                <p class="mb-3">Our emergency department is staffed round the clock with experienced specialists ready to handle any medical crisis.</p>
+                <p>
+                    <i class="fas fa-phone-alt me-2"></i>
+                    <strong class="emergency-contact">Emergency Hotline: +91 7020337705</strong>
+                </p>
+            </div>
+            <div class="col-md-4">
+                <img src="https://images.unsplash.com/photo-1581595219315-a187dd40c322?auto=format&fit=crop&w=300&q=80" 
+                     class="img-fluid rounded" alt="Emergency Services">
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterServices() {
+    const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+    const serviceCards = document.querySelectorAll('.service-card');
+    
+    serviceCards.forEach(card => {
+        const serviceName = card.querySelector('.card-title').textContent.toLowerCase();
+        const serviceDescription = card.querySelector('.card-text').textContent.toLowerCase();
+        
+        if (serviceName.includes(searchQuery) || serviceDescription.includes(searchQuery)) {
+            card.parentElement.style.display = 'block';
+        } else {
+            card.parentElement.style.display = 'none';
+        }
+    });
+}
+
+function selectService(serviceName) {
+    // This would fetch service details from the server in a real app
+    // For now, we'll just show/hide the details section
+    const serviceDetails = document.getElementById('serviceDetails');
+    serviceDetails.style.display = serviceDetails.style.display === 'none' ? 'block' : 'none';
+}
+
+function bookService(serviceName) {
+    alert(`Booking request for ${serviceName} has been initiated. We will contact you shortly.`);
+}
+
+function likeService(serviceId) {
+    fetch(`/api/service/${serviceId}/like`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const likeButton = event.target;
+            const heartIcon = likeButton.querySelector('i');
+            const likeCount = likeButton.querySelector('span') || likeButton.nextSibling;
+            
+            heartIcon.classList.toggle('far');
+            heartIcon.classList.toggle('fas');
+            
+            if (likeCount) {
+                likeCount.textContent = data.likes;
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
