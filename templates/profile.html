@@ -1,0 +1,119 @@
+<!-- templates/profile.html -->
+{% extends "base.html" %}
+
+{% block title %}My Profile - MediCare{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <!-- Profile Card -->
+        <div class="card">
+            <div class="card-body text-center">
+                <img src="https://ui-avatars.com/api/?name={{ user.name }}&background=2a9d8f&color=fff&size=120" 
+                     alt="{{ user.name }}" class="rounded-circle mb-3" width="120" height="120">
+                <h4>{{ user.name }}</h4>
+                <p class="text-muted">Member since {{ user.created_at.strftime('%b %Y') }}</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge bg-success">Active</span>
+                    <span class="badge bg-info">Premium</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact -->
+        <div class="card mt-4">
+            <div class="card-header bg-danger text-white">
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Emergency Contact</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><i class="fas fa-phone me-2"></i>+91 7020337705</p>
+                <p class="mb-0"><i class="fas fa-clock me-2"></i>24/7 Available</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <!-- Profile Form -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Personal Information</h5>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('update_profile') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ user.name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
+                            <small class="text-muted">Email cannot be changed</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="2">{{ user.address or '' }}</textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">Update Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Medical Information -->
+        <div class="card mt-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Medical Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Blood Type</label>
+                        <select class="form-select">
+                            <option selected>Select Blood Type</option>
+                            <option>A+</option>
+                            <option>A-</option>
+                            <option>B+</option>
+                            <option>B-</option>
+                            <option>AB+</option>
+                            <option>AB-</option>
+                            <option>O+</option>
+                            <option>O-</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Allergies</label>
+                        <input type="text" class="form-control" placeholder="List any allergies">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Medical Conditions</label>
+                    <textarea class="form-control" rows="3" placeholder="List any medical conditions"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Current Medications</label>
+                    <textarea class="form-control" rows="2" placeholder="List current medications"></textarea>
+                </div>
+                <button class="btn btn-outline-success">Save Medical Info</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

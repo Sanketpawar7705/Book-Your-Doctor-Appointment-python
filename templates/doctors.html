@@ -1,0 +1,160 @@
+<!-- templates/doctors.html -->
+{% extends "base.html" %}
+
+{% block title %}Our Doctors | MediCare{% endblock %}
+
+{% block content %}
+<section class="text-center mb-5">
+    <h2 class="text-success">Meet Our Experts</h2>
+    <p class="lead">Highly experienced doctors committed to your health and wellbeing.</p>
+    
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search doctors..." id="searchQuery">
+                <button class="btn btn-success" type="button" onclick="filterDoctors()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="btn-group mb-4" role="group">
+        <button type="button" class="btn btn-outline-success active" onclick="filterSpecialty('')">All</button>
+        <button type="button" class="btn btn-outline-success" onclick="filterSpecialty('Cardiologist')">Cardiology</button>
+        <button type="button" class="btn btn-outline-success" onclick="filterSpecialty('Neurologist')">Neurology</button>
+        <button type="button" class="btn btn-outline-success" onclick="filterSpecialty('Pediatrician')">Pediatrics</button>
+    </div>
+</section>
+
+<div class="row row-cols-1 row-cols-md-3 g-4" id="doctorsContainer">
+    {% for doctor in doctors %}
+    <div class="col doctor-card" data-specialty="{{ doctor.specialty }}">
+        <div class="card h-100 text-center">
+            <img src="{{ doctor.image }}" class="card-img-top" alt="{{ doctor.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ doctor.name }}</h5>
+                <p class="text-muted">{{ doctor.specialty }}</p>
+                <p class="card-text">{{ doctor.description }}</p>
+                <div class="text-warning mb-2">
+                    {% for i in range(5) %}
+                        {% if i < doctor.rating|int %}
+                            <i class="fas fa-star"></i>
+                        {% elif i < doctor.rating %}
+                            <i class="fas fa-star-half-alt"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    <span class="text-muted ms-2">({{ doctor.reviews }})</span>
+                </div>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-success">Book Appointment</a>
+                    <button class="btn btn-outline-danger" onclick="likeDoctor({{ doctor.id }})">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i> {{ doctor.availability }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<section class="mt-5" id="favoriteDoctors" style="display: none;">
+    <h3 class="text-center text-success mb-4">Your Favorite Doctors</h3>
+    <div class="row row-cols-1 row-cols-md-3 g-4" id="favoriteDoctorsContainer">
+        <!-- Favorite doctors will be added here dynamically -->
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentSpecialty = '';
+let searchQuery = '';
+
+function filterDoctors() {
+    searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+    applyFilters();
+}
+
+function filterSpecialty(specialty) {
+    currentSpecialty = specialty;
+    
+    // Update button states
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    applyFilters();
+}
+
+function applyFilters() {
+    const doctorCards = document.querySelectorAll('.doctor-card');
+    
+    doctorCards.forEach(card => {
+        const doctorName = card.querySelector('.card-title').textContent.toLowerCase();
+        const doctorSpecialty = card.getAttribute('data-specialty');
+        const doctorDescription = card.querySelector('.card-text').textContent.toLowerCase();
+        
+        const matchesSearch = doctorName.includes(searchQuery) || 
+                             doctorSpecialty.toLowerCase().includes(searchQuery) ||
+                             doctorDescription.includes(searchQuery);
+        const matchesSpecialty = currentSpecialty === '' || doctorSpecialty === currentSpecialty;
+        
+        card.style.display = (matchesSearch && matchesSpecialty) ? 'block' : 'none';
+    });
+}
+
+function likeDoctor(doctorId) {
+    fetch(`/api/doctor/${doctorId}/like`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const heartIcon = event.target.querySelector('i');
+            heartIcon.classList.toggle('far');
+            heartIcon.classList.toggle('fas');
+            
+            // Add to favorites if liked
+            if (heartIcon.classList.contains('fas')) {
+                addToFavorites(doctorId);
+            } else {
+                removeFromFavorites(doctorId);
+            }
+        }
+    });
+}
+
+function addToFavorites(doctorId) {
+    // This would be more complex in a real app with user authentication
+    const favoriteSection = document.getElementById('favoriteDoctors');
+    favoriteSection.style.display = 'block';
+    
+    // Find the doctor card and clone it for favorites
+    const doctorCard = document.querySelector(`.doctor-card[data-specialty]`);
+    const favoriteCard = doctorCard.cloneNode(true);
+    
+    // Remove the like button from favorite card
+    const likeButton = favoriteCard.querySelector('.btn-outline-danger');
+    likeButton.parentNode.removeChild(likeButton);
+    
+    document.getElementById('favoriteDoctorsContainer').appendChild(favoriteCard);
+}
+
+function removeFromFavorites(doctorId) {
+    // Implementation for removing from favorites
+    // This would be more complex in a real app
+}
+</script>
+{% endblock %}
