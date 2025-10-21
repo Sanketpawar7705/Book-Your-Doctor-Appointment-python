@@ -1,0 +1,17 @@
+# Python
+*.pyc
+__pycache__/
+
+# Virtual environment
+.venv/
+venv/
+
+# Instance folder
+instance/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
